@@ -16,9 +16,9 @@ type Result struct {
 	} `json:"result"`
 }
 
-type AssetPair struct {
-	Error  []string             `json:"error"`
-	Result map[string]AssetPair `json:"result"`
+type AssetPairResponse struct {
+	Error  []string                `json:"error"`
+	Result map[string]AssetDetails `json:"result"`
 }
 
 type AssetDetails struct {
