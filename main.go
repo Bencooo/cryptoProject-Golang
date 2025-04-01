@@ -16,6 +16,17 @@ type Result struct {
 	} `json:"result"`
 }
 
+type AssetPair struct {
+	Error  []string             `json:"error"`
+	Result map[string]AssetPair `json:"result"`
+}
+
+type AssetDetails struct {
+	Altname string `json:"altname"`
+	Base    string `json:"base"`
+	Quote   string `json:"quote"`
+}
+
 func getResponse() string {
 	resp, err := http.Get("https://api.kraken.com/0/public/Time")
 	if err != nil {
