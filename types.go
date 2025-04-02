@@ -35,3 +35,8 @@ type TickerByPair struct {
 	H []string `json:"h"`
 	O string   `json:"o"`
 }
+
+type TickerInsert struct {
+	PairName   string
+	TickerData TickerByPair
+}

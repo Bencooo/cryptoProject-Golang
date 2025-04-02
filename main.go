@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -136,30 +137,28 @@ INSERT INTO ticker_info (
 	}
 	defer stmtTicker.Close()
 
-	for pairName := range assetPairsResult.Result {
-		// Appel API ticker
-		tickerBody := getResponse(fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName))
-		tickerResult := parseTickerPairResponse(tickerBody)
+	var wg sync.WaitGroup
+	tickerChan := make(chan TickerInsert)
 
-		if tickerData, ok := tickerResult.Result[pairName]; ok {
-			_, err := stmtTicker.Exec(
-				pairName,
-				tickerData.A[0],
-				tickerData.B[0],
-				tickerData.C[0],
-				tickerData.O,
-				tickerData.H[1],
-				tickerData.L[1],
-				tickerData.V[1],
-			)
-			if err != nil {
-				log.Printf("Erreur insertion ticker %s : %v", pairName, err)
+	for pairName := range assetPairsResult.Result {
+		wg.Add(1)
+		go func(pair string) {
+			defer wg.Done()
+
+			tickerBody := getResponse(fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pair))
+			tickerResult := parseTickerPairResponse(tickerBody)
+
+			if tickerData, ok := tickerResult.Result[pair]; ok {
+				tickerChan <- TickerInsert{
+					PairName:   pair,
+					TickerData: tickerData,
+				}
 			}
-		}
+		}(pairName)
 
 		count++
-		if count >= 10 {
-			break
+		if count == 10 {
+			return
 		}
 	}
 
