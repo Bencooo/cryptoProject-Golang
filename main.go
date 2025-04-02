@@ -100,13 +100,23 @@ func main() {
 
 	count := 0
 	for pairName, details := range resultAssetPair.Result {
-		fmt.Printf("• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
+		fmt.Printf("\n• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
+
+		url := fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName)
+		tickerResponse := getResponse(url)
+		tickerParsed := parseTickerPairResponse(tickerResponse)
+
+		if tickerData, ok := tickerParsed.Result[pairName]; ok {
+			fmt.Printf("  ➜ Ask: %s | Bid: %s | Last: %s | Open: %s\n",
+				tickerData.A[0], tickerData.B[0], tickerData.C[0], tickerData.O)
+		} else {
+			fmt.Println("Unknown")
+		}
+
 		count++
 		if count == 10 {
-			return
+			break
 		}
 	}
 
-	response3 := getResponse("https://api.kraken.com/0/public/Ticker")
-	resultTickerPair := parseTickerPairResponse(response3)
 }
