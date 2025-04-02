@@ -27,8 +27,8 @@ type AssetDetails struct {
 	Quote   string `json:"quote"`
 }
 
-func getResponse() string {
-	resp, err := http.Get("https://api.kraken.com/0/public/Time")
+func getResponse(url string) string {
+	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,10 +53,12 @@ func parseResponse(body string) Result {
 }
 
 func main() {
-	response := getResponse()
+	response := getResponse("https://api.kraken.com/0/public/Time")
 	result := parseResponse(response)
 
 	fmt.Println(result.Result)
 	fmt.Println(result.Result.Unixtime)
 	fmt.Println(result.Result.Rfc1123)
+
+	response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
 }
