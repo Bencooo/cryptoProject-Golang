@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func getResponse(url string) string {
@@ -27,13 +29,13 @@ func getResponse(url string) string {
 
 func main() {
 	// Remove DB file if it exists
-	err := os.Remove("./kraken_database.db")
+	err := os.Remove("kraken_database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Open a new database connection
-	db, err := sql.Open("sqlite3", "./kraken_database.db")
+	db, err := sql.Open("sqlite3", "kraken_database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,6 +97,19 @@ func main() {
 	}
 
 	log.Println("Ticker info table created successfully")
+	log.Println("-------------------------")
+
+	// Get the response from the API
+	body := getResponse("https://api.kraken.com/0/public/Time")
+	// Parse the response
+	systemStatusResponse := parseResponse(body)
+	// Insert the data into the database
+	insertSQL := `INSERT INTO system_status (unixtime, rfc1123) VALUES (?, ?)`
+	_, err = db.Exec(insertSQL, systemStatusResponse.Result.Unixtime, systemStatusResponse.Result.Rfc1123)
+	if err != nil {
+		log.Fatalf("Error inserting data: %v", err)
+	}
+	log.Println("System status data inserted successfully")
 	log.Println("-------------------------")
 
 	response := getResponse("https://api.kraken.com/0/public/Time")
