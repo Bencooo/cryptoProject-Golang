@@ -40,6 +40,63 @@ func main() {
 
 	defer db.Close()
 
+	// Create table
+	createTableSQL := `
+	CREATE TABLE IF NOT EXISTS system_status (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		unixtime INTEGER,
+		rfc1123 TEXT
+	);`
+
+	_, err = db.Exec(createTableSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("System status table created successfully")
+	log.Println("-------------------------")
+
+	//create a table for asset pairs
+	createAssetTableSQL := `
+	CREATE TABLE IF NOT EXISTS asset_pairs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		pair TEXT NOT NULL UNIQUE,
+		altname TEXT,
+		base TEXT,
+		quote TEXT
+	);`
+
+	_, err = db.Exec(createAssetTableSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Asset pairs table created successfully")
+	log.Println("-------------------------")
+
+	// Create table for ticker info
+	createTickerTableSQL := `
+	CREATE TABLE IF NOT EXISTS ticker_info (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		pair TEXT NOT NULL,
+		ask_price TEXT,
+		bid_price TEXT,
+		last_trade_price TEXT,
+		open_price TEXT,
+		high_24h TEXT,
+		low_24h TEXT,
+		volume_24h TEXT,
+		retrieved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY(pair) REFERENCES asset_pairs(pair)
+	);`
+
+	_, err = db.Exec(createTickerTableSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Ticker info table created successfully")
+	log.Println("-------------------------")
+
 	response := getResponse("https://api.kraken.com/0/public/Time")
 	result := parseResponse(response)
 
