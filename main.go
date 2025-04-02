@@ -28,6 +28,7 @@ func getResponse(url string) string {
 }
 
 func main() {
+	// ----------------------------------------- DATABASE --------------------------------------------
 	// Remove DB file if it exists
 	err := os.Remove("kraken_database.db")
 	if err != nil {
@@ -42,18 +43,6 @@ func main() {
 
 	defer db.Close()
 
-	// Create table
-	createTableSQL := `
-	CREATE TABLE IF NOT EXISTS system_status (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		unixtime INTEGER,
-		rfc1123 TEXT
-	);`
-
-	_, err = db.Exec(createTableSQL)
-	if err != nil {
-		log.Fatal(err)
-	}
 	log.Println("System status table created successfully")
 	log.Println("-------------------------")
 
@@ -176,5 +165,38 @@ INSERT INTO ticker_info (
 
 	log.Println("✅ Ticker info inserted successfully")
 	log.Println("-------------------------")
+
+	// -------------------------------------------------------------------------------------------------
+
+	// response := getResponse("https://api.kraken.com/0/public/Time")
+	// result := parseResponse(response)
+
+	// fmt.Println(result.Result)
+	// fmt.Println(result.Result.Unixtime)
+	// fmt.Println(result.Result.Rfc1123)
+
+	// response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
+	// resultAssetPair := parseAssetPairResponse(response2)
+
+	// count := 0
+	// for pairName, details := range resultAssetPair.Result {
+	// 	fmt.Printf("\n• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
+
+	// 	url := fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName)
+	// 	tickerResponse := getResponse(url)
+	// 	tickerParse := parseTickerPairResponse(tickerResponse)
+
+	// 	if tickerData, ok := tickerParse.Result[pairName]; ok {
+	// 		fmt.Printf("  ➜ Ask: %s | Bid: %s | Last: %s | Open: %s\n",
+	// 			tickerData.A[0], tickerData.B[0], tickerData.C[0], tickerData.O)
+	// 	} else {
+	// 		fmt.Println("Unknown")
+	// 	}
+
+	// 	count++
+	// 	if count == 10 {
+	// 		break
+	// 	}
+	// }
 
 }
