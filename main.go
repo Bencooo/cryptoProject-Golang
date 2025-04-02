@@ -27,6 +27,23 @@ type AssetDetails struct {
 	Quote   string `json:"quote"`
 }
 
+type TickerResponse struct {
+	Error  []string                `json:"error"`
+	Result map[string]TickerByPair `json:"result"`
+}
+
+type TickerByPair struct {
+	A []string `json:"a"`
+	B []string `json:"b"`
+	C []string `json:"c"`
+	V []string `json:"v"`
+	P []string `json:"p"`
+	T []int    `json:"t"`
+	L []string `json:"l"`
+	H []string `json:"h"`
+	O string   `json:"o"`
+}
+
 func getResponse(url string) string {
 	resp, err := http.Get(url)
 	if err != nil {
