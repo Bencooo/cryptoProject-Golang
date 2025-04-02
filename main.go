@@ -134,35 +134,47 @@ func main() {
 	log.Println("Asset pairs inserted successfully")
 	log.Println("-------------------------")
 
-	// response := getResponse("https://api.kraken.com/0/public/Time")
-	// result := parseResponse(response)
+	count := 0
+	insertTickerSQL := `
+INSERT INTO ticker_info (
+	pair, ask_price, bid_price, last_trade_price,
+	open_price, high_24h, low_24h, volume_24h
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
-	// fmt.Println(result.Result)
-	// fmt.Println(result.Result.Unixtime)
-	// fmt.Println(result.Result.Rfc1123)
+	stmtTicker, err := db.Prepare(insertTickerSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmtTicker.Close()
 
-	// response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
-	// resultAssetPair := parseAssetPairResponse(response2)
+	for pairName := range assetPairsResult.Result {
+		// Appel API ticker
+		tickerBody := getResponse(fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName))
+		tickerResult := parseTickerPairResponse(tickerBody)
 
-	// count := 0
-	// for pairName, details := range resultAssetPair.Result {
-	// 	fmt.Printf("\n• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
+		if tickerData, ok := tickerResult.Result[pairName]; ok {
+			_, err := stmtTicker.Exec(
+				pairName,
+				tickerData.A[0],
+				tickerData.B[0],
+				tickerData.C[0],
+				tickerData.O,
+				tickerData.H[1],
+				tickerData.L[1],
+				tickerData.V[1],
+			)
+			if err != nil {
+				log.Printf("Erreur insertion ticker %s : %v", pairName, err)
+			}
+		}
 
-	// 	url := fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName)
-	// 	tickerResponse := getResponse(url)
-	// 	tickerParse := parseTickerPairResponse(tickerResponse)
+		count++
+		if count >= 10 {
+			break
+		}
+	}
 
-	// 	if tickerData, ok := tickerParse.Result[pairName]; ok {
-	// 		fmt.Printf("  ➜ Ask: %s | Bid: %s | Last: %s | Open: %s\n",
-	// 			tickerData.A[0], tickerData.B[0], tickerData.C[0], tickerData.O)
-	// 	} else {
-	// 		fmt.Println("Unknown")
-	// 	}
-
-	// 	count++
-	// 	if count == 10 {
-	// 		break
-	// 	}
-	// }
+	log.Println("✅ Ticker info inserted successfully")
+	log.Println("-------------------------")
 
 }
