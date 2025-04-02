@@ -1,10 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 func getResponse(url string) string {
@@ -24,6 +26,20 @@ func getResponse(url string) string {
 }
 
 func main() {
+	// Remove DB file if it exists
+	err := os.Remove("./kraken_database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Open a new database connection
+	db, err := sql.Open("sqlite3", "./kraken_database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
 	response := getResponse("https://api.kraken.com/0/public/Time")
 	result := parseResponse(response)
 
