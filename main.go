@@ -52,6 +52,15 @@ func parseResponse(body string) Result {
 	return value
 }
 
+func parseAssetPairResponse(body string) AssetPairResponse {
+	var value AssetPairResponse
+	err := json.Unmarshal([]byte(body), &value)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return value
+}
+
 func main() {
 	response := getResponse("https://api.kraken.com/0/public/Time")
 	result := parseResponse(response)
@@ -61,4 +70,5 @@ func main() {
 	fmt.Println(result.Result.Rfc1123)
 
 	response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
+	resultAssetPair := parseAssetPairResponse(response2)
 }
