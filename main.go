@@ -71,4 +71,13 @@ func main() {
 
 	response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
 	resultAssetPair := parseAssetPairResponse(response2)
+
+	count := 0
+	for pairName, details := range resultAssetPair.Result {
+		fmt.Printf("• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
+		count++
+		if count == 10 {
+			return
+		}
+	}
 }
