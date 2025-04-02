@@ -112,35 +112,57 @@ func main() {
 	log.Println("System status data inserted successfully")
 	log.Println("-------------------------")
 
-	response := getResponse("https://api.kraken.com/0/public/Time")
-	result := parseResponse(response)
+	// Get the response for asset pairs
+	assetPairsBody := getResponse("https://api.kraken.com/0/public/AssetPairs")
+	assetPairsResult := parseAssetPairResponse(assetPairsBody)
 
-	fmt.Println(result.Result)
-	fmt.Println(result.Result.Unixtime)
-	fmt.Println(result.Result.Rfc1123)
+	insertAssetSQL := `INSERT OR IGNORE INTO asset_pairs (pair, altname, base, quote) VALUES (?, ?, ?, ?)`
 
-	response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
-	resultAssetPair := parseAssetPairResponse(response2)
+	stmt, err := db.Prepare(insertAssetSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
 
-	count := 0
-	for pairName, details := range resultAssetPair.Result {
-		fmt.Printf("\n• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
-
-		url := fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName)
-		tickerResponse := getResponse(url)
-		tickerParse := parseTickerPairResponse(tickerResponse)
-
-		if tickerData, ok := tickerParse.Result[pairName]; ok {
-			fmt.Printf("  ➜ Ask: %s | Bid: %s | Last: %s | Open: %s\n",
-				tickerData.A[0], tickerData.B[0], tickerData.C[0], tickerData.O)
-		} else {
-			fmt.Println("Unknown")
-		}
-
-		count++
-		if count == 10 {
-			break
+	for pairName, details := range assetPairsResult.Result {
+		_, err := stmt.Exec(pairName, details.Altname, details.Base, details.Quote)
+		if err != nil {
+			log.Printf("Erreur insertion paire %s : %v", pairName, err)
 		}
 	}
+
+	log.Println("Asset pairs inserted successfully")
+	log.Println("-------------------------")
+
+	// response := getResponse("https://api.kraken.com/0/public/Time")
+	// result := parseResponse(response)
+
+	// fmt.Println(result.Result)
+	// fmt.Println(result.Result.Unixtime)
+	// fmt.Println(result.Result.Rfc1123)
+
+	// response2 := getResponse("https://api.kraken.com/0/public/AssetPairs")
+	// resultAssetPair := parseAssetPairResponse(response2)
+
+	// count := 0
+	// for pairName, details := range resultAssetPair.Result {
+	// 	fmt.Printf("\n• %s | Altname: %s | Base: %s | Quote: %s\n", pairName, details.Altname, details.Base, details.Quote)
+
+	// 	url := fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName)
+	// 	tickerResponse := getResponse(url)
+	// 	tickerParse := parseTickerPairResponse(tickerResponse)
+
+	// 	if tickerData, ok := tickerParse.Result[pairName]; ok {
+	// 		fmt.Printf("  ➜ Ask: %s | Bid: %s | Last: %s | Open: %s\n",
+	// 			tickerData.A[0], tickerData.B[0], tickerData.C[0], tickerData.O)
+	// 	} else {
+	// 		fmt.Println("Unknown")
+	// 	}
+
+	// 	count++
+	// 	if count == 10 {
+	// 		break
+	// 	}
+	// }
 
 }
