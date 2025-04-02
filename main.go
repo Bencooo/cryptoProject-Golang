@@ -1,48 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 )
-
-type Result struct {
-	Error  []string
-	Result struct {
-		Unixtime int    `json:"unixtime"`
-		Rfc1123  string `json:"rfc1123"`
-	} `json:"result"`
-}
-
-type AssetPairResponse struct {
-	Error  []string                `json:"error"`
-	Result map[string]AssetDetails `json:"result"`
-}
-
-type AssetDetails struct {
-	Altname string `json:"altname"`
-	Base    string `json:"base"`
-	Quote   string `json:"quote"`
-}
-
-type TickerResponse struct {
-	Error  []string                `json:"error"`
-	Result map[string]TickerByPair `json:"result"`
-}
-
-type TickerByPair struct {
-	A []string `json:"a"`
-	B []string `json:"b"`
-	C []string `json:"c"`
-	V []string `json:"v"`
-	P []string `json:"p"`
-	T []int    `json:"t"`
-	L []string `json:"l"`
-	H []string `json:"h"`
-	O string   `json:"o"`
-}
 
 func getResponse(url string) string {
 	resp, err := http.Get(url)
@@ -58,33 +21,6 @@ func getResponse(url string) string {
 
 	fmt.Println("Response Body :", string(body))
 	return string(body)
-}
-
-func parseResponse(body string) Result {
-	var value Result
-	err := json.Unmarshal([]byte(body), &value)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return value
-}
-
-func parseAssetPairResponse(body string) AssetPairResponse {
-	var value AssetPairResponse
-	err := json.Unmarshal([]byte(body), &value)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return value
-}
-
-func parseTickerPairResponse(body string) TickerResponse {
-	var value TickerResponse
-	err := json.Unmarshal([]byte(body), &value)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return value
 }
 
 func main() {
@@ -104,9 +40,9 @@ func main() {
 
 		url := fmt.Sprintf("https://api.kraken.com/0/public/Ticker?pair=%s", pairName)
 		tickerResponse := getResponse(url)
-		tickerParsed := parseTickerPairResponse(tickerResponse)
+		tickerParse := parseTickerPairResponse(tickerResponse)
 
-		if tickerData, ok := tickerParsed.Result[pairName]; ok {
+		if tickerData, ok := tickerParse.Result[pairName]; ok {
 			fmt.Printf("  ➜ Ask: %s | Bid: %s | Last: %s | Open: %s\n",
 				tickerData.A[0], tickerData.B[0], tickerData.C[0], tickerData.O)
 		} else {
